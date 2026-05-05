@@ -47,7 +47,8 @@ pipeline {
                     sh '''
                         docker run --rm \
                           --memory=768m \
-                          -e SONAR_HOST_URL \
+                          --add-host host.docker.internal:host-gateway \
+                          -e SONAR_HOST_URL=http://host.docker.internal:9000 \
                           -e SONAR_AUTH_TOKEN \
                           -e MAVEN_OPTS="-Xms128m -Xmx384m" \
                           -v "$HOST_WORKSPACE:/workspace" \
