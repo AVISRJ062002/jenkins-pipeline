@@ -1,0 +1,14 @@
+services:
+  service1:
+    image: cicd-service1:latest
+    container_name: cicd-service1
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+
+  service2:
+    image: cicd-service2:latest
+    container_name: cicd-service2
+    restart: unless-stopped
+    ports:
+      - "8082:3000"

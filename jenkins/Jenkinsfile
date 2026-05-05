@@ -1,0 +1,61 @@
+pipeline {
+    agent any
+
+    options {
+        skipDefaultCheckout(true)
+    }
+
+    environment {
+        SERVICE1_IMAGE = "cicd-service1:latest"
+        SERVICE2_IMAGE = "cicd-service2:latest"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/AVISRJ062002/jenkins-pipeline.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn -f services/service1/pom.xml -B clean package -DskipTests'
+                sh 'cd services/service2 && npm install --no-fund --no-audit'
+            }
+        }
+
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                        mvn -f services/service1/pom.xml -B sonar:sonar \
+                          -DskipTests \
+                          -Dsonar.projectKey=service1 \
+                          -Dsonar.projectName=service1
+                    '''
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t $SERVICE1_IMAGE services/service1'
+                sh 'docker build -t $SERVICE2_IMAGE services/service2'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'docker compose up -d --remove-orphans'
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh 'bash scripts/health-check.sh http://host.docker.internal:8081'
+                sh 'bash scripts/health-check.sh http://host.docker.internal:8082'
+            }
+        }
+    }
+}

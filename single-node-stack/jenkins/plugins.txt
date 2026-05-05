@@ -1,0 +1,11 @@
+configuration-as-code
+credentials
+credentials-binding
+docker-workflow
+git
+github
+job-dsl
+pipeline-stage-view
+plain-credentials
+sonar
+workflow-aggregator

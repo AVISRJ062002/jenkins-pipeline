@@ -1,0 +1,12 @@
+{
+  "name": "service2",
+  "version": "1.0.0",
+  "description": "Sample Node.js service for the CI/CD pipeline",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

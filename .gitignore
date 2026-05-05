@@ -1,0 +1,8 @@
+.scannerwork/
+**/node_modules/
+**/target/
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/cicd-key
+terraform/cicd-key.pub
