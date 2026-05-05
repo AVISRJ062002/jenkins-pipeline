@@ -23,13 +23,16 @@ pipeline {
             steps {
                 sh '''
                     docker run --rm \
+                      --memory=512m \
                       -v "$HOST_WORKSPACE:/workspace" \
                       -w /workspace/services/service1 \
+                      -e MAVEN_OPTS="-Xms128m -Xmx256m" \
                       maven:3.9.9-eclipse-temurin-17 \
                       mvn -B clean package -DskipTests
                 '''
                 sh '''
                     docker run --rm \
+                      --memory=384m \
                       -v "$HOST_WORKSPACE:/workspace" \
                       -w /workspace/services/service2 \
                       node:18 \
@@ -43,8 +46,10 @@ pipeline {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
                         docker run --rm \
+                          --memory=768m \
                           -e SONAR_HOST_URL \
                           -e SONAR_AUTH_TOKEN \
+                          -e MAVEN_OPTS="-Xms128m -Xmx384m" \
                           -v "$HOST_WORKSPACE:/workspace" \
                           -w /workspace/services/service1 \
                           maven:3.9.9-eclipse-temurin-17 \
