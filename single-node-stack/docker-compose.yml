@@ -46,8 +46,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD}"
 
   jenkins:
-    build:
-      context: ./jenkins
+    image: jenkins/jenkins:lts-jdk17
     container_name: jenkins
     restart: unless-stopped
     user: root
@@ -71,6 +70,8 @@ services:
     volumes:
       - /opt/jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker:ro
+      - /usr/libexec/docker/cli-plugins:/usr/libexec/docker/cli-plugins:ro
       - ./jenkins/casc.yaml:/var/jenkins_home/casc.yaml:ro
 
 volumes:
