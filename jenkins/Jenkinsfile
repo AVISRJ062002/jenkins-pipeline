@@ -8,6 +8,7 @@ pipeline {
     environment {
         SERVICE1_IMAGE = "cicd-service1:latest"
         SERVICE2_IMAGE = "cicd-service2:latest"
+        HOST_WORKSPACE = "/opt/jenkins_home/workspace/cicd-pipeline"
     }
 
     stages {
@@ -20,8 +21,20 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn -f services/service1/pom.xml -B clean package -DskipTests'
-                sh 'cd services/service2 && npm install --no-fund --no-audit'
+                sh '''
+                    docker run --rm \
+                      -v "$HOST_WORKSPACE:/workspace" \
+                      -w /workspace/services/service1 \
+                      maven:3.9.9-eclipse-temurin-17 \
+                      mvn -B clean package -DskipTests
+                '''
+                sh '''
+                    docker run --rm \
+                      -v "$HOST_WORKSPACE:/workspace" \
+                      -w /workspace/services/service2 \
+                      node:18 \
+                      sh -c "npm install --no-fund --no-audit"
+                '''
             }
         }
 
@@ -29,10 +42,16 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
-                        mvn -f services/service1/pom.xml -B sonar:sonar \
-                          -DskipTests \
-                          -Dsonar.projectKey=service1 \
-                          -Dsonar.projectName=service1
+                        docker run --rm \
+                          -e SONAR_HOST_URL \
+                          -e SONAR_AUTH_TOKEN \
+                          -v "$HOST_WORKSPACE:/workspace" \
+                          -w /workspace/services/service1 \
+                          maven:3.9.9-eclipse-temurin-17 \
+                          mvn -B sonar:sonar \
+                            -DskipTests \
+                            -Dsonar.projectKey=service1 \
+                            -Dsonar.projectName=service1
                     '''
                 }
             }
