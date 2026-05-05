@@ -21,6 +21,7 @@ pipeline {
 
         stage('Build') {
             steps {
+                sh 'docker stop grafana prometheus || true'
                 sh '''
                     docker run --rm \
                       --memory=512m \
@@ -81,6 +82,12 @@ pipeline {
                 sh 'bash scripts/health-check.sh http://host.docker.internal:8081'
                 sh 'bash scripts/health-check.sh http://host.docker.internal:8082'
             }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker start prometheus grafana || true'
         }
     }
 }
