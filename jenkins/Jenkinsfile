@@ -8,6 +8,8 @@ pipeline {
 
     environment {
         IMAGE_NAME = "myapp"
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-21.0.10'
+        PATH = "${env.JAVA_HOME}\\bin;${env.PATH}"
     }
 
     stages {
@@ -37,6 +39,9 @@ pipeline {
                     withSonarQubeEnv('sonarqube') {
 
                         bat """
+                        set JAVA_HOME=${env.JAVA_HOME}
+                        set PATH=%JAVA_HOME%\\bin;%PATH%
+
                         ${scannerHome}\\bin\\sonar-scanner.bat ^
                         -Dsonar.projectKey=myapp ^
                         -Dsonar.sources=./services/service1 ^
