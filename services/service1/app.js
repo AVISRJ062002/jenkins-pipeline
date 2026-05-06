@@ -1,14 +1,13 @@
 const express = require('express');
+
 const app = express();
 
+const PORT = process.env.PORT || 8080;
+
 app.get('/', (req, res) => {
-  res.send("Service 2 new updates running");
+    res.send('Node.js App Running Successfully!');
 });
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
-
-app.listen(3000, () => {
-  console.log("Service 2 started");
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
 });
