@@ -2,6 +2,11 @@ pipeline {
 
     agent any
 
+    options {
+        ansiColor('xterm')
+        timestamps()
+    }
+
     environment {
         IMAGE_NAME = "myapp"
     }
@@ -11,6 +16,8 @@ pipeline {
         stage('Checkout') {
 
             steps {
+
+                echo 'Checking out source code...'
 
                 git branch: 'main',
                 url: 'https://github.com/AVISRJ062002/jenkins-pipeline.git'
@@ -22,16 +29,23 @@ pipeline {
 
             steps {
 
-                withSonarQubeEnv('sonarqube') {
+                script {
 
-                    bat '''
-                    sonar-scanner ^
-                    -Dsonar.projectKey=myapp ^
-                    -Dsonar.sources=./services/service1 ^
-                    -Dsonar.host.url=http://localhost:9000 ^
-                    -Dsonar.token=squ_b0ec8360a645f9f8652c9ec1a6ae39a3d2b2eef8
-                    '''
+                    echo 'Running SonarQube analysis...'
 
+                    def scannerHome = tool 'sonar-scanner'
+
+                    withSonarQubeEnv('sonarqube') {
+
+                        bat """
+                        ${scannerHome}\\bin\\sonar-scanner.bat ^
+                        -Dsonar.projectKey=myapp ^
+                        -Dsonar.sources=./services/service1 ^
+                        -Dsonar.host.url=http://localhost:9000 ^
+                        -Dsonar.token=squ_b0ec8360a645f9f8652c9ec1a6ae39a3d2b2eef8
+                        """
+
+                    }
                 }
             }
         }
@@ -39,6 +53,8 @@ pipeline {
         stage('Build Docker Image') {
 
             steps {
+
+                echo 'Building Docker image...'
 
                 bat 'docker build -t %IMAGE_NAME% ./services/service1'
 
@@ -48,6 +64,8 @@ pipeline {
         stage('Run Container') {
 
             steps {
+
+                echo 'Deploying Docker container...'
 
                 bat '''
                 docker rm -f myapp || exit 0
@@ -73,6 +91,8 @@ pipeline {
         }
 
         always {
+
+            echo 'Listing all Docker containers...'
 
             bat 'docker ps -a'
 
