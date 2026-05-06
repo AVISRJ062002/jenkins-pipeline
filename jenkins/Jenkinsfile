@@ -1,93 +1,47 @@
 pipeline {
+
     agent any
 
-    options {
-        skipDefaultCheckout(true)
-    }
-
     environment {
-        SERVICE1_IMAGE = "cicd-service1:latest"
-        SERVICE2_IMAGE = "cicd-service2:latest"
-        HOST_WORKSPACE = "/opt/jenkins_home/workspace/cicd-pipeline"
+        IMAGE_NAME = "myapp"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/AVISRJ062002/jenkins-pipeline.git'
+                git branch: 'main',
+                url: 'https://github.com/AVISRJ062002/jenkins-pipeline.git'
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                sh 'docker stop grafana prometheus || true'
-                sh '''
-                    docker run --rm \
-                      --memory=512m \
-                      -v "$HOST_WORKSPACE:/workspace" \
-                      -w /workspace/services/service1 \
-                      -e MAVEN_OPTS="-Xms128m -Xmx256m" \
-                      maven:3.9.9-eclipse-temurin-17 \
-                      mvn -B clean package -DskipTests
-                '''
-                sh '''
-                    docker run --rm \
-                      --memory=384m \
-                      -v "$HOST_WORKSPACE:/workspace" \
-                      -w /workspace/services/service2 \
-                      node:18 \
-                      sh -c "npm install --no-fund --no-audit"
-                '''
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
-        stage('SonarQube Scan') {
+        stage('SonarQube Analysis') {
             steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'RAW_SONAR_TOKEN')]) {
+                withSonarQubeEnv('sonarqube') {
                     sh '''
-                        docker run --rm \
-                          --memory=768m \
-                          --add-host host.docker.internal:host-gateway \
-                          -e MAVEN_OPTS="-Xms128m -Xmx384m" \
-                          -v "$HOST_WORKSPACE:/workspace" \
-                          -w /workspace/services/service1 \
-                          maven:3.9.9-eclipse-temurin-17 \
-                          mvn -B sonar:sonar \
-                            -DskipTests \
-                            -Dsonar.host.url=http://host.docker.internal:9000 \
-                            -Dsonar.login=$RAW_SONAR_TOKEN \
-                            -Dsonar.projectKey=service1 \
-                            -Dsonar.projectName=service1
+                    sonar-scanner \
+                    -Dsonar.projectKey=myapp \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=http://sonarqube:9000 \
+                    -Dsonar.login=squ_b0ec8360a645f9f8652c9ec1a6ae39a3d2b2eef8
                     '''
                 }
             }
         }
 
-        stage('Docker Build') {
+        stage('Run Container') {
             steps {
-                sh 'docker build -t $SERVICE1_IMAGE services/service1'
-                sh 'docker build -t $SERVICE2_IMAGE services/service2'
+                sh '''
+                docker rm -f myapp || true
+                docker run -d --name myapp -p 8000:8000 myapp
+                '''
             }
-        }
-
-        stage('Deploy') {
-            steps {
-                sh 'docker compose up -d --remove-orphans'
-            }
-        }
-
-        stage('Health Check') {
-            steps {
-                sh 'bash scripts/health-check.sh http://host.docker.internal:8081'
-                sh 'bash scripts/health-check.sh http://host.docker.internal:8082'
-            }
-        }
-    }
-
-    post {
-        always {
-            sh 'docker start prometheus grafana || true'
         }
     }
 }
