@@ -10,5 +10,5 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(3000, () => {
-  console.log("Service 2 started");
+  console.log("Service 2 sarthak started");
 });
