@@ -17,19 +17,20 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                bat 'docker build -t %IMAGE_NAME% .'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonarqube') {
-                    sh '''
-                    sonar-scanner \
-                    -Dsonar.projectKey=myapp \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=http://sonarqube:9000 \
-                    -Dsonar.login=squ_b0ec8360a645f9f8652c9ec1a6ae39a3d2b2eef8
+
+                    bat '''
+                    sonar-scanner ^
+                    -Dsonar.projectKey=myapp ^
+                    -Dsonar.sources=. ^
+                    -Dsonar.host.url=http://localhost:9000 ^
+                    -Dsonar.login=YOUR_TOKEN
                     '''
                 }
             }
@@ -37,8 +38,9 @@ pipeline {
 
         stage('Run Container') {
             steps {
-                sh '''
-                docker rm -f myapp || true
+
+                bat '''
+                docker rm -f myapp
                 docker run -d --name myapp -p 8000:8000 myapp
                 '''
             }
