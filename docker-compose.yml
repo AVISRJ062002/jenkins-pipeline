@@ -1,14 +1,96 @@
+version: '3.9'
+
 services:
-  service1:
-    image: cicd-service1:latest
-    container_name: cicd-service1
-    restart: unless-stopped
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    privileged: true
+    user: root
+
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    networks:
+      - devops-network
+
+  sonarqube:
+    image: sonarqube:lts-community
+    container_name: sonarqube
+
+    ports:
+      - "9000:9000"
+
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+
+    networks:
+      - devops-network
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+
+    ports:
+      - "9090:9090"
+
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+    networks:
+      - devops-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+    networks:
+      - devops-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+    container_name: cadvisor
+
     ports:
       - "8081:8080"
 
-  service2:
-    image: cicd-service2:latest
-    container_name: cicd-service2
-    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+
+    networks:
+      - devops-network
+
+  node-exporter:
+    image: prom/node-exporter
+    container_name: node-exporter
+
     ports:
-      - "8082:3000"
+      - "9100:9100"
+
+    networks:
+      - devops-network
+
+networks:
+  devops-network:
+
+volumes:
+  jenkins_home:
+  sonarqube_data:
+  grafana_data:
