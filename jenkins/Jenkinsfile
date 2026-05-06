@@ -17,22 +17,9 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %IMAGE_NAME% .'
-            }
-        }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonarqube') {
+                bat 'docker build -t %IMAGE_NAME% ./services/service1'
 
-                    bat '''
-                    sonar-scanner ^
-                    -Dsonar.projectKey=myapp ^
-                    -Dsonar.sources=. ^
-                    -Dsonar.host.url=http://localhost:9000 ^
-                    -Dsonar.login=YOUR_TOKEN
-                    '''
-                }
             }
         }
 
@@ -41,7 +28,7 @@ pipeline {
 
                 bat '''
                 docker rm -f myapp
-                docker run -d --name myapp -p 8000:8000 myapp
+                docker run -d --name myapp -p 8081:8080 myapp
                 '''
             }
         }
