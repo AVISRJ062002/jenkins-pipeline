@@ -2,6 +2,11 @@ pipeline {
 
     agent any
 
+    tools {
+        maven 'Maven'
+        jdk 'JDK17'
+    }
+
     environment {
         IMAGE_NAME = "myapp"
     }
@@ -9,13 +14,17 @@ pipeline {
     stages {
 
         stage('Checkout') {
+
             steps {
+
                 git branch: 'main',
                 url: 'https://github.com/AVISRJ062002/jenkins-pipeline.git'
+
             }
         }
 
         stage('Build Maven Project') {
+
             steps {
 
                 dir('services/service1') {
@@ -27,6 +36,7 @@ pipeline {
         }
 
         stage('Build Docker Image') {
+
             steps {
 
                 bat 'docker build -t %IMAGE_NAME% ./services/service1'
@@ -35,12 +45,14 @@ pipeline {
         }
 
         stage('Run Container') {
+
             steps {
 
                 bat '''
                 docker rm -f myapp
                 docker run -d --name myapp -p 8081:8080 myapp
                 '''
+
             }
         }
     }
