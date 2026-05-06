@@ -2,11 +2,6 @@ pipeline {
 
     agent any
 
-    tools {
-        maven 'Maven'
-        jdk 'JDK17'
-    }
-
     environment {
         IMAGE_NAME = "myapp"
     }
@@ -20,18 +15,6 @@ pipeline {
                 git branch: 'main',
                 url: 'https://github.com/AVISRJ062002/jenkins-pipeline.git'
 
-            }
-        }
-
-        stage('Build Maven Project') {
-
-            steps {
-
-                dir('services/service1') {
-
-                    bat 'mvn clean package'
-
-                }
             }
         }
 
@@ -54,6 +37,21 @@ pipeline {
                 '''
 
             }
+        }
+    }
+
+    post {
+
+        success {
+
+            echo 'Pipeline executed successfully!'
+
+        }
+
+        failure {
+
+            echo 'Pipeline failed!'
+
         }
     }
 }
