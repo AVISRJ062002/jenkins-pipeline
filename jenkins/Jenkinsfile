@@ -18,6 +18,24 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+
+            steps {
+
+                withSonarQubeEnv('sonarqube') {
+
+                    bat '''
+                    sonar-scanner ^
+                    -Dsonar.projectKey=myapp ^
+                    -Dsonar.sources=./services/service1 ^
+                    -Dsonar.host.url=http://localhost:9000 ^
+                    -Dsonar.token=squ_b0ec8360a645f9f8652c9ec1a6ae39a3d2b2eef8
+                    '''
+
+                }
+            }
+        }
+
         stage('Build Docker Image') {
 
             steps {
@@ -32,8 +50,8 @@ pipeline {
             steps {
 
                 bat '''
-                docker rm -f myapp
-                docker run -d --name myapp -p 8081:8080 myapp
+                docker rm -f myapp || exit 0
+                docker run -d --name myapp -p 8082:8080 myapp
                 '''
 
             }
@@ -51,6 +69,12 @@ pipeline {
         failure {
 
             echo 'Pipeline failed!'
+
+        }
+
+        always {
+
+            bat 'docker ps -a'
 
         }
     }
